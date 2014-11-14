@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<style type="text/css">
+
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			#calculator {
+				height: 400px;
+				width: 250px;
+				background: blue;
+				margin: 0 auto;
+			}
+
+			#screendiv {
+				text-align: center;
+			}
+
+			#screen {
+				height: 75px;
+			  	width: 225px;
+				margin-top: 10px;
+				font-family: verdana;
+				font-size: 150%;
+				text-align: right;
+				
+				
+			}
+
+			.button {
+				height: 50px;
+				width: 50px;
+				background: #CCCCCC;
+				display: inline-block;
+			}
+
+			.top {
+				margin-top: 10px;
+
+			
+			}
+
+			.bottom {
+				margin-bottom:  10px;
+			}
+
+			.left {
+
+				margin-left: 10px;
+			}
+
+			.right {
+
+				margin-left: 10px; 
+
+			}
+
+			.outline{
+
+			outline: 1px black solid;
+
+			}
+
+			.middle {
+				margin: 5px;
+			}
+
+			
+
+
+			
+			
+			
+
+		</style>
+		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+		<script type="text/javascript">
+
+			// Do something 20 times: you have to specify how using 
+			$(document).ready(function() {
+
+				var pos;
+
+			//row (up down)
+
+				for (var i = 0; i < 5; i++) {
+								
+			//column (left right)
+					for (var j = 0; j < 4; j++) {
+
+
+					// ****CORNER CASES*****
+
+
+					// top-left
+					if (i == 0 && j == 0)
+						pos = "top left";
+
+					// top-right
+					else if (i == 0 && j == 3)
+						pos = "top right";
+
+					//bottom-left
+					else if (i == 4 && j == 0)
+						pos = "bottom left";
+
+					// bottom-right
+					else if (i == 4 && j == 3)
+						pos = "bottom right";
+
+			        	//** BORDER CASES
+				   	// top row	
+			        	else if (i == 0)
+			        	pos = "top";
+
+			        	
+				   	// left column
+			        	else if (j == 0 )
+			        	pos = "left";
+
+			        	//bottom column
+			        	else if (i == 4)
+			        	pos = "bottom";
+
+			        	//right column
+			        	else if  (j == 3)
+			        	pos = "right";
+
+			        	else
+			        		
+
+					
+
+					
+					
+						$("#buttons").append("<div class='button outline'></div>");
+
+						if (j == 3)
+							$("#buttons").append("</br>");
+					}
+
+					
+				}
+
+				
+				
+			});
+		
+			
+		</script>
+	</head>
+	<body>
+	
+		<!-- the calculator -->
+		<div id="calculator">
+
+			<!-- the screen -->
+			<div id="screendiv">
+				<input id="screen" type="text" disabled="disabled"/>
+			</div>
+
+			<!-- the buttons -->
+			<div id="buttons">
+				
+			</div>
+		</div>
+	</body>
+</html>

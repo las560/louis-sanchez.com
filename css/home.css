@@ -1,0 +1,24 @@
+/**
+ * styling strictly used for the homepage
+ * of louis-sanchez.com
+ */
+
+/* div containing sliding images */
+#slider {
+	height : 51px;
+	width : 2000px;
+	overflow : hidden;
+}
+
+/* turn selection off so that user doesn reveal hidden space */
+.container_24 {
+	-moz-user-select : none;
+	-webkit-user-select : none;
+	user-select : none;
+}
+
+/* hides sliding images */
+.default, .hidden {
+	position : relative;
+	left : 5000px;
+}

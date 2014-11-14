@@ -1,0 +1,79 @@
+<html>
+	<head>
+		<style type="text/css">
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			#box1 {
+				background: red;		
+			}
+
+			#box2 {
+				background: blue;
+			}
+
+			#box3 {
+				background: green;
+			}
+
+			#boxholder {
+				margin: 250px auto;
+				width: 320px
+			}
+
+			.box {
+				height: 100px;
+				width: 100px;
+				display: inline-block;
+			}
+
+			.outline {
+				outline: 2px solid black;
+			}
+			
+		</style>
+
+	
+		
+		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			$(document).ready(function() {
+
+				var answer = "box1";
+				
+				$(".box").click(function() {
+
+					var guess = "This is ";
+					var choice;
+
+					choice = $(this).attr("id");
+
+					if (answer == choice)
+						guess += choice + ". You have answered correctly";
+						
+					else
+						guess += choice + ". You have answered incorrectly";
+
+					alert(guess);
+5
+				});
+			});
+		</script>	
+
+	</head>
+
+	<body>
+		<div id="boxholder">
+			<div id="box1" class="box"></div>
+			<div id="box2" class="box"></div>
+			<div id="box3" class="box"></div>
+		</div>	
+	</body>
+</html>
+
+
+
+
+

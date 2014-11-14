@@ -1,0 +1,9 @@
+/* font color for textboxes */
+.text {
+	color: #595959;
+	border: 2px #000000 solid;
+}
+
+#columns select {
+	width: 100%;
+}

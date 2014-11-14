@@ -1,0 +1,149 @@
+/**
+ * This style-sheet should be included in all webpages of
+ * louis-sanchez.com.  Includes universal styling properties
+ */
+
+html, body {
+	height : 100%;
+	margin : 0px;
+	padding: 0px;
+}
+
+/* support custom font */
+@font-face {
+    font-family: 'ComfortaaBold';
+    src: url('../fonts/comfortaa/comfortaa-bold.eot');
+    src: url('../fonts/comfortaa/comfortaa-bold.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/comfortaa/comfortaa-bold.woff') format('woff'),
+         url('../fonts/comfortaa/comfortaa-bold.ttf') format('truetype'),
+         url('../fonts/comfortaa/comfortaa-bold.svg#ComfortaaBold') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'ComfortaaLight';
+    src: url('../fonts/comfortaa/comfortaa-light.eot');
+    src: url('../fonts/comfortaa/comfortaa-light.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/comfortaa/comfortaa-light.woff') format('woff'),
+         url('../fonts/comfortaa/comfortaa-light.ttf') format('truetype'),
+         url('../fonts/comfortaa/comfortaa-light.svg#ComfortaaLight') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'ComfortaaRegular';
+    src: url('../fonts/comfortaa/comfortaa-regular.eot');
+    src: url('../fonts/comfortaa/comfortaa-regular.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/comfortaa/comfortaa-regular.woff') format('woff'),
+         url('../fonts/comfortaa/comfortaa-regular.ttf') format('truetype'),
+         url('../fonts/comfortaa/comfortaa-regular.svg#ComfortaaRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+/* font classes */
+.cb {
+	font-family : "ComfortaaBold";
+}
+
+.cl {
+	font-family : "ComfortaaLight";
+}
+
+.cr {
+	font-family : "ComfortaaRegular";
+}
+
+/* top-right resume link */
+#about, #resume {
+	margin-top : 10px;
+	text-align : right;
+	font-family : "ComfortaaBold";
+	cursor : pointer;
+}
+
+/* Style for resume div */
+#resumediv {
+	overflow-x : hidden;
+	overflow-y : hidden;
+	height : 0px;
+    width : 0px;
+    display : none;
+    position: fixed;
+    top: 0px;
+    background-color : #fff;
+    border : 2px solid #ccc;
+    -moz-box-shadow : 0 1px 5px #333;
+    -webkit-box-shadow : 0 1px 5px #333;
+}
+
+/* div containing picture */
+#louis_div {
+	background-color : #CCCCCC;
+	text-align : center;
+}
+
+/* div containing shape-shifting rectangle */
+#rect {
+	position : absolute;
+	width: 100px;
+	height: 100px;
+	top: 100px;
+	left:600px;
+	background-color : #FF0000;
+	z-index : 1;
+}
+
+/* set content divs to front of the screen */
+.container_24, #resumediv {
+	z-index : 2;
+}
+
+/* wrapping div using 960gs */
+#container {
+   min-height: 100%;
+   /* margin-bottom: -200px; */
+   position: relative;
+}
+
+/* tool bar */
+#header {
+	padding-top : 20px;
+	padding-bottom : 20px;
+}
+
+/* main content */
+#body {
+	/*padding-bottom: 100px;*/   /* Height of the footer */
+}
+
+/* footer */
+#footer {
+	height: 100px;
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
+
+/* content inside footer div */
+#footer_content {
+	padding-top : 60px;
+	text-align: center;
+	font-size: 115%;
+	
+}
+
+/* link styling */
+a {
+    outline: none;
+}
+
+a img {
+    border: none;
+}
+

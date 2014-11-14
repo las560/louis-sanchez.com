@@ -1,0 +1,175 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+	
+		<style type="text/css">
+
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+
+			#keypad {
+				height: 400px;
+				width: 250px;
+				background: black;
+				margin: 0 auto;
+			}
+
+
+			#screendiv {
+				text-align: center;
+			}
+
+
+			#screen {
+				height: 75px;
+			  	width: 225px;
+				margin-top: 10px;
+				font-family: verdana;
+				font-size: 150%;
+				text-align: right;
+
+				
+				
+				
+			}
+
+			#boxholder{ 
+				height: 300px;
+				width: 225px;
+				margin-left: 13px;
+
+				
+
+
+
+
+			}
+
+			#enter{
+				height: 94px;
+				width: 167px;
+				background: orange;
+				display: inline-block;
+				font-size: 150%;
+
+			}
+		
+
+			.buttons {
+				height: 100px;
+				width: 53px;
+				background: blue;
+				display: inline-block;
+				text-align: center;
+				font-size: 150%;
+			}
+			
+			.outline {
+				outline: 1px black solid;
+			}
+			
+		</style>
+		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+		<script type="text/javascript">
+
+
+		function enterButton()
+		{
+		alert("hello");
+
+
+		}
+		
+
+
+			$(document).ready(function() {
+
+			var answer= "911";
+			var counter= 0;
+			var input;
+			var output;
+
+				
+				// functionality
+				$(".buttons").click(function() {
+
+                    //gives value to the click
+				input = $(this).attr("id");
+
+
+				if  (input == answer){
+				output = "Access Granted"}
+								
+			
+				else {
+					counter++
+					output = 5 - counter + " attempts left!" 			
+					}
+
+				alert(counter);
+
+
+				if (counter == 5 )
+				{
+				alert("game over")
+
+
+				
+
+				}
+				
+				
+
+				
+
+
+				
+
+				
+
+					
+
+					
+					
+
+				
+											
+
+				});
+				
+			});
+			
+		</script>
+	</head>
+	<body>
+	
+		<!-- the keypad -->
+		<div id="keypad">
+
+			<!-- the screen -->
+			<div id="screendiv">
+				<input id="screen" type="text" disabled="disabled"/>
+			</div>
+
+			
+			
+				<div id= "boxholder" class= "outline" >
+					<div id= "1" class= "outline buttons"> 1</div>
+					<div id= "2" class= "outline buttons"> 2</div>
+					<div id= "3" class= "outline buttons"> 3</div>
+					<div id= "4" class= "outline buttons"> 4</div>
+					<div id= "5" class= "outline buttons"> 5</div>
+					<div id= "6" class= "outline buttons"> 6</div>
+					<div id= "7" class= "outline buttons"> 7</div>
+					<div id= "8" class= "outline buttons"> 8</div>
+					<div id= "9" class= "outline buttons"> 9</div>
+					<div id= "enter" class= "outline" onclick="enterButton()" >ENTER</div>
+				</div>
+				
+			</div>
+			

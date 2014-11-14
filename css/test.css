@@ -1,0 +1,137 @@
+/**
+ * This style-sheet should be included in all webpages of
+ * louis-sanchez.com.  Includes universal styling properties
+ */
+
+/* sets borders for testing purposes */
+.test, .test > div {
+	outline : 1px solid black;
+}
+
+html, body {
+	height : 100%;
+	margin : 0px;
+}
+
+/* support custom font */
+@font-face {
+    font-family : 'cb';
+    src: url(http://louis-sanchez.com/fonts/Comfortaa-Bold.ttf) format("truetype");
+}
+
+/* top-right sitemap */
+#about, #resume {
+	margin-top : 10px;
+	text-align : right;
+	font-family : "cb";
+}
+
+/* cursor settings */
+#home, #about, #resume {
+	cursor : pointer;
+}
+	
+/* Style for resume div */
+#resumediv {
+	overflow-x : hidden;
+	overflow-y : hidden;
+	height : 0px;
+	width : 0px;
+	display : none;
+	position: fixed;
+	top: 0px;
+	background-color : #fff;
+	border : 2px solid #ccc;
+	-moz-box-shadow : 0 1px 5px #333;
+	-webkit-box-shadow : 0 1px 5px #333;
+}
+
+/* div containing picture */
+#louis_div {
+	text-align : center;
+}
+
+/**
+ * div containing shape-shifting rectangle 
+ * these are the default settings for the rectangle
+ * via the homepage 
+ */
+#rect {
+	position: absolute;
+	width: 1060px;
+	height: 350px;
+	background-color : #CCCCCC;
+	z-index: 1;
+}
+
+/* set content divs to front of the screen */
+.container_24 {
+	z-index: 2;
+}
+
+#resumediv {
+	z-index: 3;
+}
+
+/* wrapping div using 960gs */
+#container {
+   min-height: 100%;
+   margin-bottom: -200px;
+   position: relative;
+}
+
+/* tool bar */
+#header {
+	padding-top : 20px;
+	padding-bottom : 20px;
+}
+
+/* footer */
+#footer {
+	height: 200px;
+	position: relative;
+}
+
+/* content inside footer div */
+#footer_content {
+	padding-top : 81px;
+	text-align: center;
+}
+
+/* used for clearing space between content and footer */
+.clearfooter {
+   height: 200px;
+   clear: both;
+}
+
+/* hide objects for smooth rendering*/
+#rect {
+	visibility: hidden;	
+}
+
+/***********************************************************************************************/
+
+/**
+ * styling strictly used for the homepage
+ * of louis-sanchez.com
+ */
+
+/* div containing sliding images */
+#slider {
+	height : 51px;
+	width : 2000px;
+	overflow : hidden;
+}
+
+/* turn selection off so that user doesn't reveal hidden space */
+.container_24 {
+	-moz-user-select : none;
+	-webkit-user-select : none;
+	user-select : none;
+}
+
+/* move images off screen for sliding */
+.hidden, .default {
+	position : relative;
+	left : 5000px;
+}

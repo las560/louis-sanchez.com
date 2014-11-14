@@ -1,0 +1,23 @@
+This was a final project for iPhone Programming, a course taught by Professor
+Nathan Hull at NYU, Spring 2010.  The authors of this project are Louis Sanchez
+and Salvatore DiLeo
+
+Explanation of Directories:
+
+Images/
+	Contains all images used for the game including .png and .psd for Photoshop
+	editting
+
+Proposal/
+	Contains a powerpoint and written document describing how to play the game
+	and what the team objectives were
+	
+builds/
+	Contains 2 working versions: One in beta and the other final.  These must
+	be compiled from source and as of right now, only xcode is conveniently 
+	supported for compilation.
+	
+working/
+	Previous versions of the project
+	
+Contact Louis Sanchez at las560@nyu.edu or loo189@hotmail.com

@@ -1,0 +1,118 @@
+<html>
+	<head>
+		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			var xpos = 10;
+			var ypos = 10;
+			setInterval(moveball, 0000);
+			$(document).ready(function() {
+				alert("ready to play pong?");
+
+				$("#starter").focus();
+
+				var hcenter = $(window).width()/2;
+				var vcenter = $(window).height()/2;
+
+				// center ball
+				$("#ball").offset({"top" : vcenter, "left" : hcenter});
+
+				// center paddles
+				$("#left").offset({"top" : vcenter - 100});
+
+				// center paddles
+				$("#right").offset({"top" : vcenter - 100});
+
+				$("#starter").keypress(function(event) {
+
+					// w = 119
+					// s = 115
+					// l = 111
+					// o = 108
+		
+					e = event.which;
+
+		
+					switch(e) {
+						case 119:	$("#left").animate({"top" : "-=25px"}, "fast", function() {
+										checkForHit();
+									});
+									break;
+						case 115:	$("#left").animate({"top" : "+=25px"}, "fast", function() {
+										checkForHit();
+									});	
+									break;
+						case 111:	$("#right").animate({"top" : "-=25px"}, "fast", function() {
+										checkForHit();
+									});
+									break;
+						case 108:	$("#right").animate({"top" : "+=25px"}, "fast", function() {
+										checkForHit();
+									});
+									break;
+						default: 	key = String.fromCharCode(e);
+									break;
+					}
+		
+				});
+			});
+
+			function checkForHit() {
+				alert("got a hit");
+			}
+			
+			function moveball() {
+			//alert($("#ball").offset().left + " " + $("#ball").offset().top);
+				var xstr = "+=10";
+				var ystr = "+=10";
+
+				if ($("#ball").offset().left > $(window).width()) {
+					xstr = "-=10px";
+				}
+					
+				else if ($("#ball").offset().left < 0) {
+					xstr = "+=10px";
+				}
+
+				if ($("#ball").offset().top > $(window).height()) {
+					ystr = "-=10px";
+				}
+
+				else if($("#ball").offset().top > $(window).height()) {
+					ystr = "+=10px";
+				}
+				alert(xstr + " " + ystr);
+				$("#ball").animate({"top" : ystr, "left" : xstr}, 									"fast");
+			}	
+		</script>
+		<style type="text/css">
+			#left, #right {
+				height: 200px;
+				width: 10px;
+				position: absolute;
+			}
+
+			#left {
+				background: blue;
+				left: 25px;
+			}
+
+			#right {
+				background: red;
+				right: 25px;
+			}
+
+			#ball {
+				background: yellow;
+				height: 15px;
+				width: 15px;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="left">b</div>
+		<div id="right">r</div>
+		<div id="ball">0</div>
+		<input id="starter" type="text" />
+	</body>
+<html>

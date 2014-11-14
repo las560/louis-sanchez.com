@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<link rel="stylesheet" type="text/css" href="../css/1080_24_10_10.css" />
+		<style type="text/css">
+			.outter {
+				outline: green solid 3px;
+			}
+			.inner {
+				outline: grey solid 3px;
+			}
+			#slider {
+				height: 51px;
+				width: 2000px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container_24 outter">
+			<div id="slider" class="grid_24 inner"></div>
+		</div>
+	</body>
+	
+	<!-- scripts -->
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+	<script type="text/javascript">
+		/**
+		 * ImageSlider class
+		 * Slides images across the homepage
+		 */
+		function ImageSlider() {
+			
+			this.pause = false;
+			this.images;
+			this.center;
+			
+			// variables used for image queuing
+			this.current;
+			this.next;
+			this.pos;
+			this.travel;
+		}
+		
+		/**
+		 * set up animations
+		 */
+		ImageSlider.prototype.resetAnimation = function() {
+			
+			// store reference to this object
+			var that = this;
+			
+			// image ID's
+			that.images = new Array(1, 2, 3, 4, 5);
+			
+			
+		}
+		
+		/**
+		 * animate images across the homepage
+		 */
+		ImageSlider.prototype.animate = function(that) {
+			
+			// get the images to be animated
+			that.current = that.images.shift();	
+			that.next = that.images[0];
+			//alert("current: " + that.current + "\nnext: " + that.next);
+		
+			// get position of the center
+			that.center = $("#" + that.current).position().left;
+			//alert("center: " + that.center);
+			
+			// get position of the next image
+			that.pos = $("#" + that.next).position().left;
+			//alert("pos: "+that.pos);
+			
+			// compute distance to travel
+			that.travel = that.pos - that.center;
+			//alert ("travel: " + that.travel);
+			alert(that.pos + " - " + that.center + " = " + that.travel);
+		
+			// slide the current image into and out of view
+			/*
+			$("#" + that.current).delay(2000)
+						  .animate({"left" : "-=2000px"}, "slow", function() {
+						  $("#" + that.current).offset({"left" : that.pos});
+						  that.images.push(that.current); 
+			});
+			*/
+			$("#" + that.next).delay(2000)
+					   .animate({"left" : "-=" + that.travel + "px"}, "slow", function() {
+					   if (that.pause)
+						   clearTimeout(t);
+					   else
+						   var t = setTimeout((function() { that.animate(that);}), 0000);
+			});
+		}
+	
+		$(document).ready(function(){
+			
+			var imageslider = new ImageSlider();
+
+			// load the images
+			var center = $(window).width()/2 - $(".container_24").offset().left;
+			
+			$("#slider").load("../html/home.html", function(){
+				/*
+				$(".default").css({
+								"position" : "relative"//,
+							 	//"left" : center+"px" 
+						 	 });
+							 
+				$(".hidden").css({
+								"position" : "relative"//,
+								//"left" : "900px"
+							});
+				*/
+				$(".sliding").css({"position" : "relative"});
+				imageslider.resetAnimation();
+				imageslider.animate(imageslider);
+							
+			});
+		});
+	</script>
+</html>

@@ -1,0 +1,1631 @@
+// version 10
+/**
+ * Import packages
+ */
+import flash.events.*;
+
+/**
+ * Variables representing the number of boxes that fill each axis
+ */
+var x_boxes = Math.floor(stage.stageWidth / Block.blockSize);
+var y_boxes = Math.floor(stage.stageHeight / Block.blockSize);
+
+
+/**
+ * The player
+ */
+var player: Player;
+
+/**
+ * Movieclips we will swap throughout the game to animate
+ */
+var player_right = new PlayerRight();
+var player_left = new PlayerLeft();
+
+/**
+ * Movieclips representing each stage
+ */
+var greenStage = new GreenGame();
+var blueStage = new BlueGame();
+var purpleStage = new PurpleGame();
+var redStage = new RedGame();
+var multiStage = new MultiColorGame();
+var shadowStage = new BlackWhiteGame();
+
+/**
+ * Set up and Initialization
+ * Making sure the screen looks like what we want it to look like when we start the game
+ *
+ * First set the background
+ *
+ * Then create a multidimensional array of characters
+ * This is the master representation of what is going on in the game
+ *
+ * x - border
+ * p - player
+ * 0 - empty space
+ * 1 - green block
+ * 2 - blue block
+ * 3 - purple block
+ * 4 - red block
+ * 5 - black block
+ * 6 - white block
+ *
+ */
+ 
+var map = new Array(13);
+var block = new Array(map.length);
+
+/**
+ * stores block explosion data
+ */
+var explodingPath = new Array();
+
+/**
+ * stores block sliding data
+ */
+var icebreakers = new Array();
+
+/**
+ * stores falling items data
+ */
+var fallingItems = new Array();
+
+/**
+ * stores stuff that needs to be deleted
+ */
+var deleteStuff = new Array();
+
+function setup(level) {
+	
+	createMapForLevel(level);
+	
+	/**
+	 * Multidimensional array of blocks
+	 * This will store all images and animations for the game
+	 *
+	 * It is important to understand we don't have to put our images inside a multidimensional 
+	 * array.  We can store them anywhere, but putting them in a matrix helps us correlate to the map
+	 * very easily.
+	 */
+		
+	/**
+	 * Initialization variables, DON'T CHANGE THESE
+	 */
+	var home_x: Number = 2 - Block.blockSize;
+	var home_y: Number = stage.stageHeight + Block.blockSize - 1;
+	var xcor:Number = home_x; 
+	var ycor:Number = home_y;
+	var i:Number;
+	var j:Number;
+	
+	/**
+	 * Lets loop through the map to set up the stage
+	 */
+	for (i = 0; i < map.length; i++) {
+		block[i] = new Array(map[i].length);
+		for (j = 0; j < map[i].length; j++) {
+			switch (map[i][j]) {
+				case 'x': block[i][j] = new BorderBlock(j, i);
+						block[i][j].setLocation(xcor, ycor);
+						stage.addChildAt(block[i][j], 1);
+						break;
+				case '0': block[i][j] = null;
+						break;
+				case '1': block[i][j] = new GreenBlock(j, i);
+						block[i][j].setLocation(xcor, ycor);
+						stage.addChildAt(block[i][j], 1);
+						break;
+				case '2': block[i][j] = new BlueBlock(j, i);
+						block[i][j].setLocation(xcor, ycor);
+						stage.addChildAt(block[i][j], 1);
+						break;
+				case '3': block[i][j] = new PurpleBlock(j, i);
+						block[i][j].setLocation(xcor, ycor);
+						stage.addChildAt(block[i][j], 1);
+						break;
+				case '4': block[i][j] = new RedBlock(j, i);
+						block[i][j].setLocation(xcor, ycor);
+						stage.addChildAt(block[i][j], 1);
+						break;
+				case '7': block[i][j] = new VictoryBlock(j, i);
+						block[i][j].setLocation(xcor, ycor);
+						stage.addChildAt(block[i][j], 1);
+						break;
+				case 'p': 
+						/**
+						 * Store the location of the player IN THE MAP (not the block grid)
+						 * By keeping track of the player we will avoid lookups.
+						 *
+						 * Add the player over another block because there needs to be some
+						 * type of block everyone on the block grid.
+						 *
+						 */
+						player = new Player(j, i);
+						// adjust the players x and y because it's registration point is different
+						player.setLocation(xcor + (Block.blockSize / 2), ycor - (Block.blockSize / 2));
+						stage.addChildAt(player, 1);
+						player.addChildAt(player_right, 1);
+						player.dir = 2;
+						break;
+						
+				default:trace(map[i][j]);
+			}
+			xcor += Block.blockSize;
+		}
+		xcor = home_x; 
+		ycor -= Block.blockSize;
+	}
+}
+
+
+
+/**
+ * Create a timer that will keep track of all objects moving
+ * along the x-axis, such as the playing moving, blocks being pushed, etc.
+ */
+var moving_timer:Timer = new Timer(20);
+
+/**
+ * Create a timer that will keep track of all objects moving
+ * up the y-axis, such as the player jumping
+ */
+var jumping_timer:Timer = new Timer(20);	
+
+/**
+ * Create a timer that will keep track of all objects moving
+ * down the y-axis, such as the player falling, blocks falling, gravity, etc.
+ */
+var falling_timer:Timer = new Timer(20);	
+
+/**
+ * Create a timer that will keep track of all exploding boxes
+ */
+var exploding_timer:Timer = new Timer(20);	
+
+/**
+ * Create a timer that will keep track of all exploding boxes
+ */
+var ice_timer:Timer = new Timer(20);	
+
+/**
+ * Create a timer that will keep track of game animation and delays
+ */
+var game_timer:Timer = new Timer(20);	// 3 seconds	
+var delay = true;
+var level = 1;
+var caption = new Level1_Caption();
+
+// set up the music
+var music = new Sound();
+music.load(new URLRequest("anathema.mp3"));
+
+// sound channel
+var channel:SoundChannel;
+channel = music.play(0, 1000);
+/**
+ * Event Listeners
+ */
+ 
+// Listen for when the player moves and stops moving
+stage.addEventListener(KeyboardEvent.KEY_DOWN, movePlayer);
+stage.addEventListener(KeyboardEvent.KEY_UP, stopPlayer);
+
+// Listen for when the clocks tick
+moving_timer.addEventListener(TimerEvent.TIMER, forward);
+jumping_timer.addEventListener(TimerEvent.TIMER, jump);
+falling_timer.addEventListener(TimerEvent.TIMER, gravity);
+exploding_timer.addEventListener(TimerEvent.TIMER, blowUp);
+ice_timer.addEventListener(TimerEvent.TIMER, slide);
+game_timer.addEventListener(TimerEvent.TIMER, playGame);
+
+
+
+
+/**
+ * Start the timers
+ */
+ 
+game_timer.start();
+
+
+function playGame(event:TimerEvent) {
+	if (delay) {
+		
+		/**
+		 * Choose our level
+		 */
+		if (game_timer.delay < 3000) {
+			// delete stuff that was prepared for deletion
+			while (deleteStuff.length > 0) {		
+				stage.removeChild(deleteStuff.shift());
+			}
+			while (icebreakers.length > 0) {
+				icebreakers.shift();
+			}
+			// delete everything else	
+			while (stage.numChildren > 1) {
+				var deleteObject = stage.getChildAt(0);
+				deleteObject.parent.removeChild(deleteObject);
+			}
+			
+			if (level == 1) {
+				stage.addChildAt(greenStage, 0);
+				caption.center(stage);
+				greenStage.addChild(caption);
+			}
+			else if (level == 2) {
+				stage.addChildAt(blueStage, 0);
+				caption = new Level2_Caption();
+				caption.center(stage);
+				blueStage.addChild(caption);
+			}
+			else if (level == 3) {
+				stage.addChildAt(purpleStage, 0);
+				caption = new Level3_Caption();
+				caption.center(stage);
+				purpleStage.addChild(caption);
+			}
+			else if (level == 4) {
+				stage.addChildAt(redStage, 0);
+				caption = new Level4_Caption();
+				caption.center(stage);
+				redStage.addChild(caption);
+			}
+			else if (level == 5) {
+				stage.addChildAt(multiStage, 0);
+				caption = new Level5_Caption();
+				caption.center(stage);
+				multiStage.addChild(caption);
+			}
+			else if (level == 6) {
+				caption = new Level6_Caption();
+				caption.center(stage);
+				stage.addChild(caption);
+			}
+			game_timer.delay = 3000;
+			return;
+		}
+		if (level < 6) {
+			delay = false
+			game_timer.delay = 20;
+			caption.parent.removeChild(caption);
+			setup(level);
+			moving_timer.start();
+			jumping_timer.start();
+			falling_timer.start();
+			exploding_timer.start();
+			ice_timer.start();
+		}
+	}
+	if (level == 1) {
+		if (player.xcor == 6 && player.ycor == 6) {
+			level = 2;
+			delay = true;
+		}
+	}
+	else if (level == 2) {
+		if (player.xcor == 15 && player.ycor == 8) {
+			level = 3;
+			delay = true;
+		}
+	}
+	else if (level == 3) {
+		if (player.xcor == 2 && player.ycor == 6 && !player.isFalling) {
+			level = 4;
+			delay = true;
+		}
+	}
+	else if (level == 4) {
+		if (player.xcor == 15 && player.ycor == 5) {
+			level = 5;
+			delay = true;
+		}
+	}
+	else if (level == 5) {
+		if (player.xcor == 4 && player.ycor == 5) {
+			level = 6;
+			moving_timer.stop();
+			jumping_timer.stop();
+			falling_timer.stop();
+			ice_timer.stop();
+			exploding_timer.stop();
+			delay = true;
+		}
+	}
+}
+
+/**
+ * movePlayer() defines what the player does when keys are pressed and released
+ */
+function movePlayer(event:KeyboardEvent) {
+	/**
+	 * if the LEFT key is pressed and the player is not pushing a block
+	 * and the player is not trapped on the left
+	 */
+	if (event.keyCode == Keyboard.LEFT && !(player.isPushing) && !player.crush) {
+		
+		/**
+		 * check the player direction so that we don't reload a movieclip already loaded
+		 * swap movieclips if direction has been changed
+		 */
+		if (player.dir != -2) {
+			
+			player.removeChildAt(1);
+			player.addChildAt(player_left, 1);
+			player.isLocked = false;
+			
+		}
+		player.dir = -2
+		player.canMove = true;
+		player.isBlockedOnRight = false;
+	}
+	
+	/**
+	 * else if the RIGHT key is pressed and the player is not pushing a block
+	 * and the player is not trapped on the right
+	 */
+	else if (event.keyCode == Keyboard.RIGHT && !player.isPushing && !player.crush) {
+		
+		/**
+		 * check the player direction so that we don't reload a movieclip already loaded
+		 * swap movieclips if direction has been changed
+		 */		
+		if (player.dir != 2) {
+			
+			player.removeChildAt(1);
+			player.addChildAt(player_right, 1);
+			player.isLocked = false;
+			
+		}
+		player.dir = 2;
+		player.canMove = true;
+		player.isBlockedOnLeft = false;
+	}
+	
+	/**
+	 * else if the SPACE key is pressed and the player is not pushing a block or jumping
+	 */
+	else if (event.keyCode == Keyboard.SPACE && !player.crush && !player.isPushing && !player.isJumping && !player.isFalling) {
+		/**
+		 * before the player even starts to jump check if there is a block above.
+		 * this can be tricky and there are two cases to consider when checking for
+		 * blocks above the player...
+		 * 
+		 * 1.	when the player is not in between two blocks, check directly above
+		 * 2.	when the player is in between two blocks, check above both those blocks
+		 *
+		 */
+		 
+		// if the player is in between blocks
+		if (player.isBetween_x) {
+			
+			// get the front xcor and the back xcor
+			var front_xcor = get_front_xcor(player);
+			var back_xcor = get_back_xcor(player);
+			
+			// check above the front xcor
+			if (map[player.ycor + 1][front_xcor] != '0' || map[player.ycor + 1][back_xcor] != '0') {
+				return;
+			}
+		}
+		
+		// else if the player is in one block 
+		else {
+			if (checkAbove(player)) {
+				return;
+			}
+		}
+		
+		// else... WE CAN JUMP !!!
+		player.start_y = player.y;
+		player.jumpdir = -11;
+		player.isJumping = true;
+	}
+	else if (event.keyCode == 82) {
+		delay = true;
+	}
+	else if (event.keyCode == 49) {
+		level = 1;
+		delay = true;
+	}
+	else if (event.keyCode == 50) {
+		level = 2;
+		delay = true;
+	}
+	else if (event.keyCode == 51) {
+		level = 3;
+		delay = true;
+	}
+	else if (event.keyCode == 52) {
+		level = 4;
+		delay = true;
+	}
+	else if (event.keyCode == 53) {
+		level = 5;
+		delay = true;
+	}
+	else if (event.keyCode == 54) {
+		level = 6;
+		delay = true;
+	}
+}
+
+/**
+ * stops the player from moving when a key is released
+ */
+function stopPlayer(event:KeyboardEvent) {
+	player.canMove = false;
+}
+
+/**
+ * how the player jumps
+ */
+function jump(event:TimerEvent) {
+	var holder;
+	var front_xcor;
+	var back_xcor;
+	if (player.isJumping) {
+		if (player.isFalling) {
+			/** 
+			 * if the player is in between blocks on the x-axis we must check
+			 * in the direction the player is jumping, whether or not there is a block
+			 * below
+			 */
+			 
+			var bottom1;
+			var bottom2;
+			
+			var topOfBlock;
+			if (player.isBetween_x) {
+				front_xcor = get_front_xcor(player);
+				back_xcor = get_back_xcor(player);
+				bottom1 = block[player.ycor - 1][front_xcor];
+				bottom2 = block[player.ycor - 1][back_xcor];
+				if (bottom1 != null) {
+					if (player.hitTestObject(bottom1)) {
+						
+						// get the top y pixel of that block
+						topOfBlock = bottom1.y - 69;		// <-- don't know why this number works?
+						player.y = topOfBlock;
+						player.isJumping = false;
+						player.isFalling = false;
+						player.jumpdir = 0;
+						return;
+					}
+				}
+				if (bottom2 != null) {
+					if (player.hitTestObject(bottom2)) {
+						
+						// get the top y pixel of that block
+						topOfBlock = bottom2.y - 69;		// <-- don't know why this number works?
+						player.y = topOfBlock;
+						player.isJumping = false;
+						player.isFalling = false;
+						player.jumpdir = 0;
+						return;
+					}
+				}
+			}
+			else if (checkBelow(player)) {
+				bottom1 = block[player.ycor - 1][player.xcor];
+				if (player.hitTestObject(bottom1)) {
+					// get the top y pixel of that block
+					topOfBlock = bottom1.y - 69;			// <-- don't know why this number works?
+					player.y = topOfBlock;
+					player.isJumping = false;
+					player.isFalling = false;
+					player.jumpdir = 0;
+					return;
+				}
+			}
+		}
+		
+		// check if the player has bumped its head
+		if (!player.isFalling) {
+			var top1;
+			var top2;
+			
+			// if the player is in between blocks
+			if (player.isBetween_x && player.jumpdir < 0) {
+				
+				// get the front xcor and the back xcor
+				front_xcor = get_front_xcor(player);
+				back_xcor = get_back_xcor(player);
+				top1 = block[player.ycor + 1][front_xcor];
+				top2 = block[player.ycor + 1][back_xcor];
+				
+				// check above the front xcor
+				if (top1 != null) {
+					if (player.hitTestObject(top1)) {
+						player.jumpdir *= -1;
+						player.isFalling = true;
+						return;
+					}
+				}
+				// check above the back xcor
+				if (top2 != null) {
+					if (player.hitTestObject(top2)) {
+						player.jumpdir *= -1;
+						player.isFalling = true;
+						return;
+					}
+				}
+			}
+			
+			// else if the player is in one block 
+			else {
+				top1 = block[player.ycor + 1][player.xcor];
+				if (checkAbove(player)) {
+					if (player.hitTestObject(top1)) {
+						player.jumpdir *= -1;
+						player.isFalling = true;
+						return;
+					}
+				}
+			}
+		}
+		
+		player.y += player.jumpdir;
+
+		/**
+		 * MUST REMEMBER TO CLEAN THIS UP **************************************
+		 */
+		holder = update_ycor(player);
+		
+		if (holder > player.ycor || holder < player.xcor) {
+			player.ycor = holder;
+			//printSurroundings("map");
+		}
+		
+		player.ycor = holder;
+		if (player.jumpdir < 20) {
+			player.jumpdir += 1;
+		}
+		if (player.jumpdir >= 0) {
+			player.isFalling = true;
+		}
+	}
+}
+
+/**
+ * simulates gravity and how all objects are affected by it
+ */
+function gravity(event:TimerEvent) {
+	if (player.danger) {
+		falling_timer.delay = 20;
+	}
+	/**
+	 * gravity should not take effect until...
+	 * 		1.	all explosions finish
+	 */
+	if (player.causedExplosion == true) {
+		return;
+	}
+	// check if something needs to fall
+	for (var i = 1; i < block.length - 1; i++) {
+		for (var j = 1; j < block[i].length - 1; j++) {
+
+			var fallingBlock = block[i][j];
+
+			// if nothing there
+			if (fallingBlock == null) {
+				continue;
+			}
+			
+			// if we found a purple block we also do nothing 
+			else if (fallingBlock.blockType == "PurpleBlock" || fallingBlock.blockType == "VictoryBlock") {
+				continue;
+			}
+			// if we found a blue block check if it is sliding 
+			else if (fallingBlock.blockType == "BlueBlock") {
+				if (fallingBlock.isSliding == true) {
+					continue;
+				}
+			}
+			
+			// if we found a block that is being pushed do nothing
+			else if (fallingBlock.isBeingPushed == true) {
+				continue;
+			}
+			
+			// the player gets its own special rules for gravity since it accelerates
+			else if (fallingBlock.blockType == "Player" && !player.isJumping) {
+				if (player.isPushing) {
+					continue;
+				}
+				// if player is in between 2 blocks
+				var bottom1;
+				var bottom2;
+				var front_xcor;
+				var back_xcor;
+				var topOfBlock;
+				
+				if (player.isBetween_x) {
+					front_xcor = get_front_xcor(player);
+					back_xcor = get_back_xcor(player);
+					bottom1 = block[player.ycor - 1][front_xcor];
+					bottom2 = block[player.ycor - 1][back_xcor];
+					if (bottom1 != null) {
+						if (player.hitTestObject(bottom1)) {
+							
+							// get the top y pixel of that block
+							topOfBlock = bottom1.y - 69;		// <-- don't know why this number works?
+							player.y = topOfBlock;
+							player.jumpdir = 0;
+							player.isFalling = false;
+							continue;
+						}
+					}
+					if (bottom2 != null) {
+						if (player.hitTestObject(bottom2)) {
+							
+							// get the top y pixel of that block
+							topOfBlock = bottom2.y - 69;		// <-- don't know why this number works?
+							player.y = topOfBlock;
+							player.jumpdir = 0;
+							player.isFalling = false;
+							continue;
+						}
+					}
+				}
+				else if (checkBelow(player)) {
+					bottom1 = block[player.ycor - 1][player.xcor];
+					if (player.hitTestObject(bottom1)) {
+						// get the top y pixel of that block
+						topOfBlock = bottom1.y - 69;			// <-- don't know why this number works?
+						player.y = topOfBlock;
+						player.jumpdir = 0;
+						player.isFalling = false;
+						continue;
+					}
+				}
+				
+				player.isFalling = true;
+				player.jumpdir += 1;
+				player.y += player.jumpdir;
+				player.ycor = update_ycor(player);			
+				continue;
+				
+			}
+			
+			// else check below whatever we found
+			var below = block[fallingBlock.ycor - 1][fallingBlock.xcor];
+			
+			if (below == null){
+				fallingBlock.y++;
+				fallingBlock.ycor = update_ycor(fallingBlock);
+				fallingBlock.isFalling = true;
+			}
+			
+			// if below is the player... CRUSH IT
+			else if (below.blockType == "Player") {
+				if (falling_timer.delay == 20 && !player.danger) {
+					player.danger = true;
+					falling_timer.delay = 2000;
+					continue;
+				}
+					fallingBlock.y++;
+					fallingBlock.ycor = update_ycor(fallingBlock);
+					
+					if (falling_timer.delay == 20) {
+						player.x = -10000;
+						player.crush = true;
+					}
+			}
+			
+			// if the falling block has not landed on its target
+			else if (fallingBlock.y < (below.y - Block.blockSize)) {
+				player.danger = false;
+				//trace("got here");
+				fallingBlock.y++;
+				fallingBlock.ycor = update_ycor(fallingBlock);
+				
+				// test if our falling block will hit next iteration
+				if (fallingBlock.y == (below.y - Block.blockSize)) {
+					fallingBlock.fell = true;
+					fallingBlock.isFalling = false;
+				}
+			}
+			if (fallingBlock.fell) {
+				if (fallingBlock.blockType == "RedBlock") {
+					explodeRedBlocks(fallingBlock);
+				}
+				else if (fallingBlock.blockType == "BlueBlock") {
+					var icebreaker = new BlueBlockBreaking(fallingBlock.xcor, fallingBlock.ycor);
+					icebreaker.x = fallingBlock.x;
+					icebreaker.y = fallingBlock.y;
+					map[icebreaker.ycor][icebreaker.xcor]= '0';
+					stage.addChild(icebreaker);
+					fallingBlock.x = -10000;
+					block[icebreaker.ycor][icebreaker.xcor] = null;
+					deleteStuff.push(icebreaker);
+				}
+				
+				fallingBlock.fell = false;
+			}
+		}
+	}
+}
+
+/**
+ * Checks if there is a block below the player
+ */
+function checkBelow(thisBlock): Boolean {
+	if(map[thisBlock.ycor - 1][thisBlock.xcor] != '0') {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+/**
+ * Checks if there is a block above the player
+ */
+function checkAbove(thisBlock): Boolean {
+	if(map[thisBlock.ycor + 1][thisBlock.xcor] != '0') {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+/**
+ * Checks if there is a block to the left of the player
+ */
+function checkLeft(thisBlock): Boolean {
+	if(map[thisBlock.ycor][thisBlock.xcor - 1] != '0') {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+/**
+ * Checks if there is a block to the right of the player
+ */
+function checkRight(thisBlock): Boolean {
+	if(map[thisBlock.ycor][thisBlock.xcor + 1] != '0') {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+/**
+ * Checks in front
+ */
+function checkFront(thisBlock): Boolean {
+	var checkHere;
+	if (thisBlock.blockType == "Player") {
+		if (player.dir == 2) {
+			checkHere = checkRight(thisBlock);
+		}
+		else if (player.dir == -2) {
+			checkHere = checkLeft(thisBlock);
+		}
+	}
+	return checkHere;
+}
+
+/**
+ * Checks in back
+ */
+function checkBack(thisBlock): Boolean {
+	var checkHere;
+	if (thisBlock.blockType == "Player") {
+		if (player.dir == 2) {
+			checkHere = checkLeft(thisBlock);
+		}
+		else if (player.dir == -2) {
+			checkHere = checkRight(thisBlock);
+		}
+	}
+	return checkHere;
+}
+
+/**
+ * Checks if there is a block diagonally to the left, above the player
+ */
+function checkLeftDiagonal(thisBlock): Boolean {
+	if(map[thisBlock.ycor + 1][thisBlock.xcor - 1] != '0') {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+/**
+ * Checks if there is a block diagonally to the right, above the player
+ */
+function checkRightDiagonal(thisBlock): Boolean {
+	if(map[thisBlock.ycor + 1][thisBlock.xcor + 1] != '0') {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+/**
+ * how the player moves forward (or backward)
+ */
+ 
+function forward(event:TimerEvent) {
+	if (player.dir == 2 && (player.x + (36/2)) >= 693) {
+		return;
+	}
+	else if (player.dir == -2 && (player.x - (36/2)) <= 0) {
+		return;
+	}
+	// get the object currently in front of the player
+	var inFront = getObjectInFrontOf(player);
+		
+	// check in front of player before continuing to block
+	if (inFront == null) {
+		if (player.dir == 2) {
+			player.isBlockedOnRight = false;
+		}
+		else if (player.dir == -2) {
+			player.isBlockedOnLeft = false;
+		}
+	}
+	else {
+		if (player.dir == 2 && canPush(player)) {
+			player.isBlockedOnRight = false;
+		}
+		else if (player.dir == -2 && canPush(player)){
+			player.isBlockedOnLeft = false;
+		}
+	}
+	
+	// if the player is trapped on one only
+	if (player.isBlockedOnLeft || player.isBlockedOnRight) {
+		return;
+	}
+	
+	/**
+	 * if the player is NOT locked.  The player "is locked" and can not move
+	 * whenever it is in the animation of pushing a block.  We lock the player
+	 * to avoid pushing a block halfway and potentially "cheating"
+	 */
+	if (!player.isLocked) {
+		
+		// if there is something in front of the player and the player is not jumping
+		if(inFront != null && !player.isJumping) {
+			// but it is not pushable
+			if (!canPush(player)&& player.hitTestObject(inFront)){
+				if (player.dir == 2) {
+					player.isBlockedOnRight = true;
+				}
+				else if (player.dir == -2) {
+					player.isBlockedOnLeft = true;
+				}
+				return;
+			}
+			
+			// or it is pushable
+			if (player.canMove && player.hitTestObject(inFront) && canPush(player) && !inFront.isFalling && checkBelow(player)) {
+				if (inFront != "PurpleBlock") {
+					if (!checkBelow(inFront)) {
+						return;
+					}
+				}
+				if (inFront.blockType == "BlueBlock") {
+					inFront.slidingdir = player.dir;
+					inFront.isSliding = true;
+				}
+				if (player.dir == 2) 
+					player.travel = player.x + Block.blockSize;
+				else if (player.dir == -2)
+					player.travel = player.x - Block.blockSize;
+				player.isLocked = true;
+				player.isPushing = true;
+				return;
+			}
+		}
+		
+		// if the player can move freely
+		if (player.canMove) {
+			var holder;
+			
+			// and is jumping or falling
+			if (player.isJumping || player.isFalling) {
+				
+				// to the right
+				if (player.dir == 2) {
+					
+					// check if there is a block that should prevent it from moving 
+					if (checkRight(player) && player.hitTestObject(block[player.ycor][player.xcor + 1])) {
+						return;
+					}
+				}
+				
+				// to the left
+				else if (player.dir == -2) {
+					
+					// check if there is a block that should prevent it from moving
+					if (checkLeft(player) && player.hitTestObject(block[player.ycor][player.xcor - 1])) {
+						return;
+					}
+				}
+			}
+			player.x += player.dir;
+			
+			/**
+			 * MUST REMEMBER TO CLEAN THIS UP **************************************
+			 */
+			holder = update_xcor(player);
+			
+			if (holder > player.xcor || holder < player.xcor) {
+				player.xcor = holder;
+				//trace(player.x);
+			}
+			player.xcor = holder;			
+		}
+	}
+	
+	// else if the player is locked, its time to push some blocks!
+	else if (player.isLocked) {
+		push();
+	}
+}
+
+/**
+ * Updates the location of whatever is passed to it within the x-axis of the map and the block grid.
+ */
+function update_xcor(thisBlock): Number {
+	
+	// outdated position in the grid
+	var previous_xcor = thisBlock.xcor;
+	var updated_xcor;
+	
+	// get the xcors for the front and back of player
+	var front_xcor = get_front_xcor(thisBlock);
+	var back_xcor = get_back_xcor(thisBlock);
+	
+	/**
+	 * When we update the player xcor we need to check both the front and back of the player
+	 * The player xcor will not be updated until both the front and back are within the same block
+	 */
+	
+	// if we have the player
+	if (thisBlock.blockType == "Player") {
+	
+		// if the xcors are not equal, don't update anything and return the previous_xcor
+		if (front_xcor != back_xcor) {
+			player.isBetween_x = true;
+			return previous_xcor;
+		}
+		
+		// else if the player has moved forward or backward to a new block
+		else  {
+			updated_xcor = front_xcor;
+			player.isBetween_x = false;
+			if (previous_xcor < updated_xcor || previous_xcor > updated_xcor) {
+				/*
+				trace("previous = " + previous_xcor);
+				trace("updated = " + updated_xcor);
+				*/
+				// update the map
+				var holder1 = map[thisBlock.ycor][updated_xcor];
+				map[thisBlock.ycor][previous_xcor] = '0';
+				map[thisBlock.ycor][updated_xcor] = 'p';
+				
+				// update the block grid
+				var holder2 = block[thisBlock.ycor][updated_xcor];
+				block[thisBlock.ycor][updated_xcor] = player;
+				block[thisBlock.ycor][previous_xcor] = null;
+				
+				// make sure we update the location of whatever the player is pushing
+				if (player.isPushing) {
+					if (player.dir == 2) {
+						map[thisBlock.ycor][updated_xcor + 1] = holder1;
+						block[thisBlock.ycor][updated_xcor + 1] = holder2;
+						holder2.xcor++;
+					}
+					else if (player.dir == -2) {
+						map[thisBlock.ycor][updated_xcor - 1] = holder1;
+						block[thisBlock.ycor][updated_xcor - 1] = holder2;
+						holder2.xcor--;
+					}
+				}
+			}
+		}	
+	}
+	
+	// we have a block
+	else  {
+		updated_xcor = front_xcor;
+		
+		// if a block has moved to a new location
+		if (previous_xcor < updated_xcor || previous_xcor > updated_xcor) {
+	
+			/*
+			trace("previous = " + previous_xcor);
+			trace("updated = " + updated_xcor);
+			*/
+			
+			// update the map
+			map[thisBlock.ycor][updated_xcor] = thisBlock.mapChar;
+			map[thisBlock.ycor][previous_xcor] = '0';
+			
+			// update the block grid
+			block[thisBlock.ycor][updated_xcor] = thisBlock;
+			block[thisBlock.ycor][previous_xcor] = null;
+		}
+	}
+	return updated_xcor;
+}
+							  
+/**
+ * Updates the location of whatever is passed to it within y-axis of the map and the block grid.
+ * This function should take a block when testing for gravity
+ */
+function update_ycor(thisBlock): Number {
+	
+	// outdated position in the grid
+	var previous_ycor = thisBlock.ycor;
+	var updated_ycor;
+	
+	// get the ycors for the top and bottom of player
+	var top_ycor = get_top_ycor(thisBlock);
+	var bottom_ycor = get_bottom_ycor(thisBlock);
+	
+	// if we are updating the player
+	if (thisBlock.blockType == "Player") {
+		/**
+		 * When we update the player ycor we need to check both the top and bottom of the player
+		 * The player ycor will not be updated until both the top and bottom are within the same block
+		 */
+		
+		// if the ycors are not equal, don't update anything and return the previous_ycor
+		if (top_ycor != bottom_ycor) {
+			player.isBetween_y = true;
+			return previous_ycor;
+		}
+		
+		// else if the player has moved up or down to a new block
+		else {
+			updated_ycor = top_ycor;
+			player.isBetween_y = false;
+			
+			// if the player has moved up or down to a new block
+			if (previous_ycor < updated_ycor || previous_ycor > updated_ycor) {
+				
+				/*
+				trace("previous = " + previous_ycor);
+				trace("updated = " + updated_ycor);
+				*/
+				
+				// update the map
+				map[previous_ycor][thisBlock.xcor] = '0';
+				map[updated_ycor][thisBlock.xcor] = 'p';
+				
+				// update the block grid
+				block[updated_ycor][thisBlock.xcor] = player;
+				block[previous_ycor][thisBlock.xcor] = null;
+			}
+		}
+	}
+	
+	// we are updating a block instead
+	else {
+		updated_ycor = top_ycor;
+		
+		// if a block has moved down to a new location
+		if (previous_ycor > updated_ycor) {
+	
+			/*
+			trace("previous = " + previous_ycor);
+			trace("updated = " + updated_ycor);
+			*/
+			
+			// update the map
+			map[updated_ycor][thisBlock.xcor] = thisBlock.mapChar;
+			map[previous_ycor][thisBlock.xcor] = '0';
+			
+			// update the block grid
+			block[updated_ycor][thisBlock.xcor] = thisBlock;
+			block[previous_ycor][thisBlock.xcor] = null;
+		}
+	}
+	return updated_ycor;
+}
+
+/**
+ * Calculate the front xcor for some block
+ */
+function get_front_xcor(thisBlock) {
+	var front;
+	
+	// if we have the player
+	if (thisBlock.blockType == "Player") {
+		
+		// if the player is facing forward
+		if (thisBlock.dir == 2) {
+			front = thisBlock.x + (36/2) - 5;	// we take off five pixels for better results
+		}
+		
+		// the player is facing backward
+		else if (thisBlock.dir == -2) {
+			front = thisBlock.x - (36/2) + 5;	// we take off five pixels for better results
+		}
+	}
+	
+	// else if we have a sliding block
+	else if (thisBlock.blockType == "BlueBlock"){
+		
+		if (thisBlock.slidingdir == 2) {
+			front = thisBlock.x + Block.blockSize - 5;	
+		}
+		
+		else if (thisBlock.slidingdir == -2) {
+			front = thisBlock.x + 5;	
+		}
+	}
+	// get the xcor for the front of bblock
+	return Math.floor(front / Block.blockSize) + 1;
+}
+
+/**
+ * Calculate the back xcor for a block
+ */
+function get_back_xcor(thisBlock) {
+	var back;
+	
+	// if we have the player
+	if (thisBlock.blockType == "Player") {
+		
+		// if the player is facing forward
+		if (thisBlock.dir == 2) {
+			back = thisBlock.x - (36/2) + 5;		// we take off five pixels for better results
+		}
+		
+		// the player is facing backward
+		else if (thisBlock.dir == -2) {
+			back = thisBlock.x + (36/2) - 5;		// we take off five pixels for better results
+		}
+	}
+	
+	// if we have a block
+	else if (thisBlock.blockType == "BlueBlock"){
+		if (thisBlock.slidingdir == 2) {
+			back = thisBlock.x + 5;		
+		}
+		
+		else if (thisBlock.slidingdir == -2) {
+			back = thisBlock.x + Block.blockSize - 5;
+		}
+		
+	}
+	
+	// get the xcor for the back of block
+	return Math.floor(back / Block.blockSize) + 1;
+}
+
+/**
+ * Calculate the top ycor for a block
+ */
+function get_top_ycor(thisBlock) {
+	var top;
+	if (thisBlock.blockType == "Player") {
+		top = player.y - (36 / 2) + 5;		// we take off five pixels for better results
+	}
+	else {
+		top = thisBlock.y;		
+	}
+	// get the ycor for the top of block
+	return Math.floor((stage.stageHeight - top) / Block.blockSize) + 1;
+}
+
+/**
+ * Calculate the bottom ycor for a block
+ */
+function get_bottom_ycor(thisBlock) {
+	var bottom;
+	if (thisBlock.blockType == "Player") {
+		bottom = player.y + (36 / 2) - 5;	// we take off five pixels for better results
+	}
+	else {
+		bottom = thisBlock.y;	
+	}
+	// get the ycor for the bottom of block
+	return Math.floor((stage.stageHeight - bottom) / Block.blockSize) + 1;
+}
+
+/**
+ * Check if something is front of whatever we pass to this function
+ * Here we use the map
+ */
+function objectInFrontOf(thisBlock): Boolean {
+	var inFront;
+	if (player.dir == 2) {
+		if (map[thisBlock.ycor][thisBlock.xcor + 1] == '0') {
+			inFront = false;
+		}
+		else {
+			inFront = true;
+		}
+	}
+	else if (player.dir == -2) {
+		if (map[thisBlock.ycor][thisBlock.xcor - 1] == '0') {
+			inFront = false;
+		}
+		else {
+			inFront = true;
+		}
+	}
+	return inFront;
+}
+
+/**
+ * Get object in front of whatever we pass to this function
+ * Here we use the block grid
+ */
+function getObjectInFrontOf(thisBlock) {
+	var inFront;
+	if (player.dir == 2) {
+		inFront = block[thisBlock.ycor][thisBlock.xcor + 1];
+	}
+	else if (player.dir == -2) {
+		inFront = block[thisBlock.ycor][thisBlock.xcor - 1];
+	}
+	return inFront;
+}
+
+/**
+ * push() defines how the player pushes a block
+ */
+function push() { 
+	var holder;
+	var pushMe;
+	
+	// if the player is pushing to the right
+	if (player.x < player.travel && player.dir == 2) {
+		pushMe = block[player.ycor][player.xcor + 1];
+		pushMe.isBeingPushed = true;
+		pushMe.x += player.dir;
+		player.x += player.dir;
+		
+		/**
+		 * MUST REMEMBER TO CLEAN THIS UP **************************************
+		 */
+		holder = update_xcor(player);
+		
+		if (holder > player.xcor) {
+			player.xcor = holder;
+			//printSurroundings("grid");
+		}
+		player.xcor = holder;
+	}
+	
+	// else if the player is pushing to the left
+	else if (player.x > player.travel && player.dir == -2) {
+		pushMe = block[player.ycor][player.xcor - 1];
+		pushMe.isBeingPushed = true;
+		pushMe.x += player.dir;
+		player.x += player.dir;
+		
+		/**
+		 * MUST REMEMBER TO CLEAN THIS UP **************************************
+		 */
+		holder = update_xcor(player);
+		
+		if (holder < player.xcor) {
+			player.xcor = holder;
+			//printSurroundings("grid");
+		}
+		
+		player.xcor = holder;
+	}
+	
+	// if the player is done pushing
+	else {
+		player.isPushing = false;
+		player.isLocked = false;
+		if (player.dir == 2) {
+			block[player.ycor][player.xcor + 1].isBeingPushed = false;
+			if (block[player.ycor][player.xcor + 1].blockType == "BlueBlock") {
+				icebreakers.push(block[player.ycor][player.xcor + 1]);
+			}
+		}
+		else if (player.dir == -2) {
+			block[player.ycor][player.xcor - 1].isBeingPushed = false;
+			if (block[player.ycor][player.xcor - 1].blockType == "BlueBlock") {
+				icebreakers.push(block[player.ycor][player.xcor - 1]);
+			}
+		}
+	}
+}
+
+/**
+ * Check to see if the player can push whatever is in front of it
+ */
+function canPush(thisBlock): Boolean {
+	var inFrontOf;
+	if (player.dir == 2) {
+		inFrontOf = map[thisBlock.ycor][thisBlock.xcor + 2];
+	}
+	else if (player.dir == -2) {
+		inFrontOf = map[thisBlock.ycor][thisBlock.xcor - 2];
+	}
+	if (inFrontOf == '0') {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+/**
+ * Function that simulates the chain reaction when red blocks explode
+ */
+function explodeRedBlocks(thisBlock) {
+	player.causedExplosion = true;
+	thisBlock.explode = true;
+	explodingPath.push(thisBlock);
+	
+	// Scan the board for blocks that need to explode
+	for (var i = 1; i < block.length - 1; i++) {
+		for (var j = 1; j < block[i].length - 1; j++) {
+			if (block[i][j] != null) {
+				if (block[i][j].blockType == "RedBlock" && block[i][j].explode == true) {
+					chain(block[i][j]);
+					//trace("redblock ( " + i + ", " + j + " ) explodes");
+				}
+			}
+		}
+	}
+}
+
+function chain(thisBlock) {
+	
+	//get block's neighbors
+	var rightNeighbor = block[thisBlock.ycor][thisBlock.xcor + 1];
+	var leftNeighbor = block[thisBlock.ycor][thisBlock.xcor - 1];
+	var topNeighbor = block[thisBlock.ycor + 1][thisBlock.xcor];
+	var bottomNeighbor = block[thisBlock.ycor - 1][thisBlock.xcor];
+	
+	// check if we chain the reaction
+	if (rightNeighbor != null) {
+		if (rightNeighbor.blockType == "RedBlock" && rightNeighbor.explode == false) {
+			rightNeighbor.explode = true;
+			explodingPath.push(rightNeighbor);
+			chain(rightNeighbor);
+		}
+	}
+	if (leftNeighbor != null) {
+		if (leftNeighbor.blockType == "RedBlock" && leftNeighbor.explode == false) {
+			leftNeighbor.explode = true;
+			explodingPath.push(leftNeighbor);
+			chain(leftNeighbor);
+		}
+	}
+	if (topNeighbor != null) {
+		if (topNeighbor.blockType == "RedBlock" && topNeighbor.explode == false) {
+			topNeighbor.explode = true;
+			explodingPath.push(topNeighbor);
+			chain(topNeighbor);
+		}
+	}
+	if (bottomNeighbor != null) {
+		if (bottomNeighbor.blockType == "RedBlock" && bottomNeighbor.explode == false) {
+			bottomNeighbor.explode = true;
+			explodingPath.push(bottomNeighbor);
+			chain(bottomNeighbor);
+		}
+	}
+}
+
+function blowUp(event:TimerEvent) {
+	if (explodingPath.length > 0) {		
+		
+		var explodingBlock = explodingPath.shift();
+		var holder = explodingBlock;
+		explodingBlock = new RedBlockExplode(holder.xcor, holder.ycor);
+		explodingBlock.x = holder.x;
+		explodingBlock.y = holder.y;
+		map[explodingBlock.ycor][explodingBlock.xcor]= '0';
+		stage.addChildAt(explodingBlock, 1);
+		stage.removeChild(holder);
+		block[explodingBlock.ycor][explodingBlock.xcor] = null;
+		deleteStuff.push(explodingBlock);
+		return;
+	}
+	player.causedExplosion = false;
+}
+
+function slide(event:TimerEvent) {
+	
+	// update all blocks who are sliding
+	for (var i = 0; i < icebreakers.length; i++) {
+		var icebreaker = icebreakers[i];
+		var inFront;
+		if (icebreaker != null) {
+			
+			// if icebreaker must stop
+			if (icebreaker.mustStop) {
+				if (icebreaker.slidingdir == 2) {
+					inFront = block[icebreaker.ycor][icebreaker.xcor + 1];
+					if ((icebreaker.x + Block.blockSize) >= inFront.x) {
+						icebreaker.isSliding = false;
+						icebreakers[i] = null;
+					}
+					else {
+						icebreaker.x += icebreaker.slidingdir;
+					}
+				}
+				else if (icebreaker.slidingdir == -2) {
+					inFront = block[icebreaker.ycor][icebreaker.xcor - 1];
+					if (icebreaker.x  <= inFront.x + Block.blockSize) {
+						icebreaker.isSliding = false;
+						icebreakers[i] = null;
+					}
+					else {
+						icebreaker.x += icebreaker.slidingdir;
+					}
+				}
+			}
+			
+			// block must slide if it can
+			else {
+				var front_xcor = get_front_xcor(icebreaker);
+				var back_xcor = get_back_xcor(icebreaker);
+				if (front_xcor == back_xcor) {
+					if (!checkBelow(icebreaker)) {
+						icebreaker.isSliding = false;
+						icebreakers[i] = null;
+						continue;
+					}
+				}
+				icebreaker.x += icebreaker.slidingdir;
+				icebreaker.xcor = update_xcor(icebreaker);
+				// get the block in front
+				if (icebreaker.slidingdir == 2) {
+					inFront = block[icebreaker.ycor][icebreaker.xcor + 1];
+				}
+				else if (icebreaker.slidingdir == -2) {
+					inFront = block[icebreaker.ycor][icebreaker.xcor - 1];
+				}
+				if (inFront != null) {
+					icebreaker.mustStop = true;
+				}
+			}
+		}
+	}
+}
+
+/**
+ * prints everything around the player with a one block radius
+ */
+function printSurroundings(type) {
+	if (type == "map") {
+		for (var i = 1; i >= -1; i--) {
+			trace(map[player.ycor + i][player.xcor - 1] + " " + map[player.ycor + i][player.xcor] + " " + map[player.ycor + i][player.xcor + 1]);
+		}
+	}
+	//trace(map[player.ycor][player.xcor - 2] + ", " + map[player.ycor][player.xcor - 1] + ", " + map[player.ycor][player.xcor] + ", " + map[player.ycor][player.xcor + 1] + ", " + map[player.ycor][player.xcor + 2]);
+	else if(type == "grid") {
+		var empty
+		for (var j = 1; j >= -1; j--) {
+			trace(block[player.ycor + j][player.xcor - 1] + " " + block[player.ycor + j][player.xcor] + " " + block[player.ycor + j][player.xcor + 1]);
+		}
+	}
+	trace("");
+}
+
+/**
+ * Prints the player's x, y coordinates
+ */
+function printPlayerCoordinates() {
+	trace("( " + player.x + ", " + player.y + " )");
+}
+
+/**
+ * Prints the xcor and ycor whatever is passed
+ */
+function printCors(thisBlock) {
+	trace("( " + thisBlock.ycor + ", " + thisBlock.xcor + " )");
+}
+
+/**
+ * prints the player's attributes
+ */
+function printPlayer() {
+	trace("player.canMove = " + player.canMove);
+	trace("player.objectAhead = " + player.objectAhead);
+	trace("player.dir = " + player.dir);
+	trace("player.isPushing = " + player.isPushing);
+	trace("player.isLocked = " + player.isLocked);
+	trace("player.isBlockedOnLeft = " + player.isBlockedOnLeft);
+	trace("player.isBlockedOnRight = " + player.isBlockedOnRight);
+}
+
+function createMapForLevel(level) {
+	
+	/**
+	 * Here are the hardcoded matrixes of what the screen should look like for each level.
+	 * It should be hardcoded so that we can see what we're setting up
+	 */
+	if (level == 1) {
+		map[12]  = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+		map[11]  = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[10]  = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[9]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[8]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[7]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[6]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[5]   = ['x', '0', '0', '0', '0', '0', '7', '0', '0', '1', '0', '0', '0', '0', '0', '0', 'x'];
+		map[4]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', 'x'];
+		map[3]   = ['x', '0', '0', '0', '0', '0', '0', '0', '1', '1', '0', '1', '0', '1', '0', '1', 'x'];
+		map[2]   = ['x', '0', '0', '1', '0', '0', '1', '0', '1', '1', '0', '1', '1', '1', '1', '1', 'x'];
+		map[1]   = ['x', 'p', '1', '1', '0', '0', '1', '0', '1', '1', '0', '1', '1', '1', '1', '1', 'x'];
+		map[0]   = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+	}
+	else if (level == 2) {
+		map[12]  = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+		map[11]  = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '3', '0', '0', '0', 'x'];
+		map[10]  = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '3', '0', '0', '0', 'x'];
+		map[9]   = ['x', '0', '0', '3', '1', '3', '3', '3', '3', '3', '0', '3', '3', '0', '0', '0', 'x'];
+		map[8]   = ['x', '3', '0', '0', '1', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', 'x'];
+		map[7]   = ['x', '0', '3', '0', '1', '0', '0', '0', '0', '1', '3', '0', '3', '0', '0', '7', 'x'];
+		map[6]   = ['x', '0', '0', '0', '2', '2', '0', '0', '0', '1', '0', '0', '3', '0', '0', '0', 'x'];
+		map[5]   = ['x', '0', '0', '3', '2', '3', '3', '2', '2', '1', '0', '0', '0', '0', '0', '0', 'x'];
+		map[4]   = ['x', '3', 'p', '0', '2', '0', '0', '2', '2', '1', '2', '2', '0', '0', '0', '0', 'x'];
+		map[3]   = ['x', '0', '3', '3', '3', '2', '2', '2', '3', '1', '3', '3', '3', '0', '0', '0', 'x'];
+		map[2]   = ['x', '0', '3', '3', '0', '1', '3', '2', '0', '1', '0', '0', '0', '0', '3', '0', 'x'];
+		map[1]   = ['x', '0', '0', '0', '0', '2', '0', '2', '3', '2', '3', '3', '3', '3', '0', '0', 'x'];
+		map[0]   = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+	}
+	else if (level == 3) {
+		map[12]  = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+		map[11]  = ['x', '0', '0', '0', '0', '0', '0', '0', '3', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[10]  = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[9]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[8]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[7]   = ['x', '0', '0', '3', '3', '3', '3', '3', '3', '3', '0', '0', '0', '0', '0', '0', 'x'];
+		map[6]   = ['x', '0', '0', '3', '0', '0', '0', '0', '0', '0', '0', '3', '0', '0', '0', '0', 'x'];
+		map[5]   = ['x', '0', '0', '7', '0', '0', '0', '0', '0', '0', '0', '3', 'p', '0', '0', '0', 'x'];
+		map[4]   = ['x', '0', '0', '3', '0', '3', '0', '3', '3', '3', '3', '3', '3', '0', '0', '3', 'x'];
+		map[3]   = ['x', '0', '0', '3', '0', '0', '3', '3', '0', '0', '3', '3', '0', '0', '3', '0', 'x'];
+		map[2]   = ['x', '0', '3', '3', '3', '3', '0', '3', '0', '0', '0', '0', '3', '0', '0', '0', 'x'];
+		map[1]   = ['x', '0', '0', '0', '0', '0', '0', '0', '3', '0', '0', '3', '3', '3', '3', '3', 'x'];		
+		map[0]   = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+	}
+	else if (level == 4) {
+		map[12]  = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+		map[11]  = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[10]  = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[9]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[8]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[7]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[6]   = ['x', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'x'];
+		map[5]   = ['x', '0', '0', '0', '0', '1', '0', '0', '0', '0', '3', '0', '0', '0', '0', '0', 'x'];
+		map[4]   = ['x', '0', '0', '0', '3', '3', '1', '3', '3', '0', '0', '0', '3', '0', '0', '7', 'x'];
+		map[3]   = ['x', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', '0', '0', '4', '0', 'x'];
+		map[2]   = ['x', 'p', '0', '4', '0', '0', '1', '0', '0', '0', '0', '4', '0', '0', '4', '0', 'x'];
+		map[1]   = ['x', '4', '4', '4', '4', '0', '4', '0', '0', '1', '0', '4', '0', '4', '4', '4', 'x'];
+		map[0]   = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+	}
+	else if (level == 5) {
+		map[12]  = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+		map[11]  = ['x', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', 'x'];
+		map[10]  = ['x', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', 'x'];
+		map[9]   = ['x', '0', '0', '3', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', 'x'];
+		map[8]   = ['x', '0', '0', '0', '3', '1', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', 'x'];
+		map[7]   = ['x', '0', '0', '0', '0', '2', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', 'x'];
+		map[6]   = ['x', '0', '0', '0', '0', '3', '1', '3', '3', '3', '3', '0', '0', '1', '0', '0', 'x'];
+		map[5]   = ['x', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', 'x'];
+		map[4]   = ['x', '0', '0', '0', '7', '0', '1', '0', '0', '0', '0', '0', '2', '2', '2', '0', 'x'];
+		map[3]   = ['x', '0', '0', '0', '0', '0', '2', '0', '0', '0', '2', '0', '2', '2', '2', '0', 'x'];
+		map[2]   = ['x', '0', '0', '0', '0', '0', '2', '0', '0', '0', '2', '0', '2', '2', '2', '0', 'x'];
+		map[1]   = ['x', 'p', '1', '2', '2', '2', '2', '0', '2', '2', '2', '2', '2', '2', '2', '2', 'x'];
+		map[0]   = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'];
+	}
+}

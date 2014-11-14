@@ -1,0 +1,148 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+	
+		<style type="text/css">
+
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			#calculator {
+				height: 400px;
+				width: 250px;
+				background: blue;
+				margin: 0 auto;
+			}
+
+			#screendiv {
+				text-align: center;
+			}
+
+			#screen {
+				height: 75px;
+			  	width: 225px;
+				margin-top: 10px;
+				font-family: verdana;
+				font-size: 150%;
+				text-align: right;
+				
+				
+			}
+
+			.button {
+				height: 50px;
+				width: 50px;
+				background: #CCCCCC;
+				display: inline-block;
+				text-align: center;
+				font-size: 150%;
+			}
+			
+			.outline {
+				outline: 1px black solid;
+			}
+			
+		</style>
+		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			
+			$(document).ready(function() {
+
+				var top, bottom, left, right, row, col, button;
+
+				// map i to buttons
+				var map = {	0 : "on/c", 1 : "/", 2 : "x",   3 : "del",
+							4 : "7",    5 : "8", 6 : "9",   7 : "-",
+							8 : "4",    9 : "5", 10: "6",   11: "+",
+							12: "1",    13: "2", 14: "3",   15: "()",
+							16: "0",    17: ".", 18: "+/-", 19: "=" }  
+				
+				for (var i = 0; i < 20; i++) {
+
+					top = "5px";
+					bottom = "5px";
+					left = "5px";
+					right = "5px";
+					row = Math.floor(i / 4);
+					col = i % 4;
+
+					// test for row
+					switch(row) {
+
+						// if top row
+						case 0:	top = "10px";
+								break;
+								
+						// else if bottom row
+						case 4:	bottom = "10px";
+								break;
+					}
+
+					// test for column
+					switch(col) {
+
+						// if top row
+						case 0:	left = "10px";
+								break;
+								
+						// else if bottom row
+						case 3:	right = "10px";
+								break;
+					}
+					
+					// create our new div
+					$button = $("<div id='" + map[i] + "' class='outline button'>" + map[i] + "</div>");
+
+					// append to the html
+					$("#buttons").append($button);
+
+					// edit the css
+					$button.css({"margin": top + " " + right + " " + bottom + " " + left});
+					
+				}
+/*
+				// functionality
+				$(".button").click(function() {
+
+					var num = parseInt($(this).attr("id"));
+					var value;
+					
+					// you clicked a number
+					if ( num >= 0 && num <= 9) {
+						value = $("#screen").attr("value");
+						$("#screen").attr("value", value += num);
+					}
+
+					// did not click a number
+				
+					else
+					*/
+
+				
+											
+
+				});
+				
+			});
+			
+		</script>
+	</head>
+	<body>
+	
+		<!-- the calculator -->
+		<div id="calculator">
+
+			<!-- the screen -->
+			<div id="screendiv">
+				<input id="screen" type="text" disabled="disabled"/>
+			</div>
+
+			<!-- the buttons -->
+			<div id="buttons">
+				
+			</div>
+			

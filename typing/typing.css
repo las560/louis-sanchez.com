@@ -1,0 +1,44 @@
+.key {
+	height: 50px;
+	width: 50px;
+}
+#spacebar {
+	height: 50px;
+	width: 275px;
+}
+
+.key, #spacebar {
+	background-color: #C8C8C8;
+	display: inline-block;
+	text-align: center;
+	margin: 3px;
+	-webkit-border-radius: 15 8px;
+	-moz-border-radius: 15px 8px;
+	border-radius: 15px 8px;
+}
+
+#output {
+	padding-top: 100px;
+}
+
+#top {
+	padding-top: 25px;
+}
+
+#textinput {
+	height: 50px;
+	width: 600px;
+	font-size: 200%;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 10px;
+}
+
+body {
+	font-family: "century gothic", verdana;
+}
+
+
+.show {
+	outline: 2px black solid;
+}

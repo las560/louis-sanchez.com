@@ -1,0 +1,27 @@
+Plethora is a block-based puzzle game created in Adobe Flash.
+This was a final project for Flash Programming, a course taught by Professor
+Nathan Hull at NYU, Fall 2010.
+
+A detailed description of the directories and their content is coming soon.
+
+For now, to download an executable copy of the game, download plethora_final.swf
+and Music/anathema.mp3.
+
+Object of the game:  Reach the top of the gold block, by pushing other blocks and jumping
+on top of them.  Each block has a special attribute so push them to figure out how they work!
+Be careful not to fall into traps or to let a block fall on top of you though.  If that happens, you'll
+have to restart the level.  Good luck.
+
+Controls:
+   LEFT ARROW KEY - move left
+   RIGHT ARROW KEY - move right
+   SPACEBAR KEY - jump
+   R KEY - reset a level
+
+Future Plans:
+   Incorporate smoother controls
+   More animations
+   Soundtrack
+   Variety of puzzles
+   Cleaner algorithms
+   Publish the game!

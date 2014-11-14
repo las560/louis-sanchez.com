@@ -1,0 +1,28 @@
+/**
+ * css used strictly for testing and debugging
+ */
+ 
+/* highlights parent div and all children in black */ 
+.test, .test > div {
+	border : 1px solid black;
+}
+
+/* highlights element in black */
+.black {
+	border : 1px solid red;
+}	
+
+/* highlights element in red */
+.red {
+	border : 1px solid red;
+}	
+
+/* highlights element in blue */
+.blue {
+	border : 1px solid blue;
+}
+
+/* highlights element in green */
+.green {
+	border : 1px solid green;
+}

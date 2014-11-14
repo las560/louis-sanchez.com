@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * testing cURL
+ */
+
+$url = 'http://tre.emv3.com/D2UTF8?';
+$myvar1 = emv_tag=2B8895A3198082B8&emv_ref=EdX7CqkdEoIb8SA9MOPe5X_VWkRyFaiy-TnUc6k-WrLRKeo&EMAIL_FIELD=XXXXXX&ZIP_CODE_FIELD=XXXXXX&AFRICAN_AMERICAN_FIELD=XXXXXX&AFTER_DARK_FIELD=XXXXXX&BUSINESS_FIELD=XXXXXX&COOKING_FIELD=XXXXXX&FICTION_FIELD=XXXXXX&HEALTH_FIELD=XXXXXX&MYSTERY_FIELD=XXXXXX&ROMANCE_FIELD=XXXXXX&SPECIAL_OFFERS_FIELD=XXXXXX&WHATS_NEW_FIELD=XXXXXX&DATEUNJOIN_FIELD=XXXXXX&DATEJOIN_FIELD=XXXXXX
+
+
+$myvars = 'myvar1=' . $myvar1 . '&myvar2=' . $myvar2;
+
+$ch = curl_init( $url );
+curl_setopt( $ch, CURLOPT_POST, 1);
+curl_setopt( $ch, CURLOPT_POSTFIELDS, $myvars);
+curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, 1);
+curl_setopt( $ch, CURLOPT_HEADER, 0);
+curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1);
+
+$response = curl_exec( $ch );
+
+
+
+
+?>
+
+http://tre.emv3.com/D2UTF8?

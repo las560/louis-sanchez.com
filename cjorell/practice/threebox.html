@@ -1,0 +1,113 @@
+<html>
+	<head>
+
+			<style type="text/css">
+				* {
+				margin: 0;
+				padding: 0;
+
+				}
+
+				#box1 {
+				background: red;
+
+				}
+
+				#box2 {
+				background: green;
+
+				}
+				
+				#box3 {
+				background: blue;
+
+				}
+
+				.box {
+				height: 100px;
+				width: 100px;
+				display: inline-block;
+
+				}
+
+				#boxholder{
+					margin: 250px;
+					width: 308px;
+					height: 100px;
+				
+					
+					
+					
+					
+
+				}
+
+				.outline {
+					
+					outline: 2px solid orange;
+
+				}
+
+
+				
+	
+
+			</style>
+
+	
+		
+		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			// after the page loads
+			$(document).ready(function() {
+
+			var answer = "box1";
+			
+			
+			
+
+				$(".box").click(function() {
+
+					var guess = "This is ";
+					var choice;
+
+					choice = $(this).attr("id"); 
+					
+					
+
+					if (answer == choice)						
+						guess += choice + ". You HAVE DONE IT WELL!";
+				
+					else
+						guess += choice + ". You are wrong!!";
+
+					alert(guess);
+					
+					
+				});
+
+				
+
+
+			});
+
+			alert("Welcome! Please choose a box!");
+
+		</script>	
+
+	</head>
+
+	<body>
+		<div id= "boxholder" class="outline">
+		<div id= "box1" class= "box"> This is choice A</div>
+		<div id= "box2" class= "box"> This is choice B</div>
+		<div id= "box3" class= "box"> This is choice 3</div>
+		</div>
+	
+
+
+	</body>
+
+
+
+</html>

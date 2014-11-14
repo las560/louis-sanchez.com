@@ -1,0 +1,28 @@
+import java.util.Random;
+
+
+// This code only generates random elements and chooses a random grouping for them.  Does not perform grouping
+// Only used for TEST purposes
+
+public class practice {
+	public static void main(String args[]) {
+	    Random randomGenerator = new Random();
+		int i;
+		int random;
+		int index;
+		int array[] = new int[16];
+		for (i = 0; i < array.length; i++)
+			array[i] = 0;
+		for (i = 0; i <= 15; i++) {
+			random = randomGenerator.nextInt(2);
+			index = randomGenerator.nextInt(16);
+			while (array[index] != 0)
+				index = randomGenerator.nextInt(16);
+			array[index] = 1;
+			if (random == 0)
+				System.out.println("Cage of 2 for index: " + index + "\n");
+			else if (random == 1)
+				System.out.println("Cage of 3 for index: " + index + "\n");
+		}
+	}
+}

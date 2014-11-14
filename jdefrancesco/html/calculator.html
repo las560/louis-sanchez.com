@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<style type="text/css">
+
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			#calculator {
+				height: 400px;
+				width: 250px;
+				background: blue;
+				margin: 0 auto;
+			}
+
+			#screendiv {
+				text-align: center;
+			}
+
+			#screen {
+				height: 75px;
+			  	width: 225px;
+				margin-top: 10px;
+				font-family: verdana;
+				font-size: 150%;
+				text-align: right;
+				
+			}
+			
+			.top {
+				margin-top: 10px;
+			}
+			
+			.bottom {
+				margin-bottom: 10px;
+			}
+			
+			.left {
+				margin-left: 10px;
+			}
+			
+			.right {
+				margin-top: 10px;
+			}
+			
+			.outline {
+				outline: 1px black solid;
+				
+			}
+			
+			
+		</style>
+		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			
+			$(document).ready(function() {
+		
+			var pos;
+		
+		
+			for (var i = 0; i < 5; i++) {
+	
+				
+				for (var j = 0; j < 4; j++) {
+				
+					$("#buttons").append("<div class = 'button'></div>");
+				
+					if ( j == 3)
+					$("#buttons").append("</br>"); 
+				}
+			
+			}
+		
+			
+			$(".button").css( {
+					"height": "50px",
+					"width": "50px",
+					"background": "#CCCCCC",
+					"display": "inline-block"
+			
+			});
+
+			});
+		
+			
+		</script>
+	</head>
+	<body>
+	
+		<!-- the calculator -->
+		<div id="calculator">
+
+			<!-- the screen -->
+			<div id="screendiv">
+				<input id="screen" type="text" disabled="disabled"/>
+			</div>
+
+			<!-- the buttons -->
+			<div id="buttons">
+				
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,20 @@
+/* styling for the picker */
+#picker {
+	background-color : #CCCCCC;
+	margin-left : 10px;
+	display : inline-block;
+}
+
+/* styling for the project preview div */
+#preview {
+	background-color : #0000DD;
+	text-align : center;
+	display : inline;
+	width : 500px;
+}
+
+.project_list {
+	position : relative;
+	border-style : solid;
+	padding : 25px;
+}

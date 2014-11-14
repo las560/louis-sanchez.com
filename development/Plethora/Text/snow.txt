@@ -1,0 +1,61 @@
+// Version 2
+/**
+ * This script randomizes snow on the snow level
+ */
+
+/**
+ * Set up  snow flakes and store them in an array
+ * Then place them above the screen and ready to fall
+ */
+var numberOfFlakes = 100;
+var snow = new Array(numberOfFlakes);
+var snow_timer:Timer = new Timer(20);
+snow_timer.addEventListener(TimerEvent.TIMER, snowFall);
+	
+for (var i = 0; i < numberOfFlakes; i++) {
+	
+	// get a new snow flake
+	snow[i] = new SnowFlake();
+	
+	// randomize it 
+	randomizeSnow(snow[i]);
+
+	// add flake to the screen
+	addChild(snow[i]);
+}
+
+snow_timer.start();
+
+function snowFall(event:TimerEvent) {
+	for (var i = 0; i < numberOfFlakes; i++) {
+		snow[i].x += snow[i].xspeed;
+		snow[i].y += snow[i].yspeed;
+		if (snow[i].y >= 507 || snow[i].x < 0 || snow[i].x > 693) {
+			randomizeSnow(snow[i]);
+		}
+	}
+}
+function randomizeSnow(flake) {
+	var snowstart = Math.floor(Math.random() * (1+2-0)) + 0;
+	var xspeed = Math.floor(Math.random() * (1+8-1)) + 1;
+	var yspeed = Math.floor(Math.random() * (1+8-1)) + 1;
+	var xstart1 = Math.floor(Math.random() * (1+693-0)) + 0;
+	var xstart2 = 0;
+	var ystart1 = Math.floor(Math.random() * (1+20-5)) + 5;
+	var ystart2 = Math.floor(Math.random() * (1+400-0)) + 0;
+
+	ystart1 *= -1;
+
+	// set the snow
+	flake.xspeed = xspeed;
+	flake.yspeed = yspeed;
+	if (snowstart == 0 || snowstart == 1) {
+		flake.x = xstart1;
+		flake.y = ystart1;
+	}
+	else {
+		flake.x = xstart2;
+		flake.y = ystart2;
+	}
+	
+}
